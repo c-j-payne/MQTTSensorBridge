@@ -1,10 +1,8 @@
 #!/home/viam/dev/current_monitor/venv/bin/python
 
-import time
 import asyncio
 import json
-import paho.mqtt.client as mqtt 
-
+import paho.mqtt.client as mqtt
 from typing import Any, ClassVar, Dict, Mapping, Optional, Sequence
 from viam.components.sensor import Sensor
 from viam.logging import getLogger
@@ -21,7 +19,7 @@ class CT101(Sensor):
     MODEL: ClassVar[Model] = Model(ModelFamily("chris", "iot-sensor"), "ct101")
     channel: int
 
-    current_value: float = 0.0  # Store the current value
+    temp_value: float = 0.0  # Store the temperature value
 
     @classmethod
     def validate_config(cls, config: ComponentConfig) -> Sequence[str]:
@@ -54,7 +52,7 @@ class CT101(Sensor):
 
     async def get_readings(self, extra: Optional[Dict[str, Any]] = None, **kwargs) -> Mapping[str, Any]:
         try:
-            return {'current': self.current_value}
+            return {'temperature': self.temp_value}
         except Exception as e:
             LOGGER.error(f"Error in get_readings: {e}")
             return {'error': str(e)}
@@ -69,7 +67,7 @@ class CT101(Sensor):
         # TTI application and device details
         tenant_id = "viam"
         app_id = "chris-test"
-        dev_id = "eui-24e124746e143655"  # Ensure the device ID is in lowercase
+        dev_id = "eui-a840412c8d5929c0"  # Ensure the device ID is in lowercase
         topic = f"v3/{app_id}@{tenant_id}/devices/{dev_id}/up"
 
         def on_connect(client, userdata, flags, rc):
@@ -87,10 +85,17 @@ class CT101(Sensor):
             try:
                 data = json.loads(msg.payload)
                 decoded_payload = data["uplink_message"]["decoded_payload"]
-                self.current_value = decoded_payload.get("current", 0.0)  # Update the current value
-                LOGGER.info(f"Updated current value: {self.current_value}")
+                LOGGER.info(f"Decoded Payload: {json.dumps(decoded_payload, indent=2)}")
+                # Check if the payload contains the temperature value
+                if "TempC1" in decoded_payload:
+                    self.temp_value = decoded_payload["TempC1"]
+                    LOGGER.info(f"Updated temperature value: {self.temp_value}")
+                else:
+                    LOGGER.info("Decoded payload does not contain temperature data.")
             except json.JSONDecodeError as e:
                 LOGGER.error(f"Error decoding JSON: {e}")
+            except KeyError as e:
+                LOGGER.error(f"KeyError in parsed data: {e}")
 
         self.mqtt_client = mqtt.Client(client_id=dev_id)
         self.mqtt_client.username_pw_set(username, password)

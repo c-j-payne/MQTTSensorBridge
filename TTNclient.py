@@ -9,7 +9,7 @@ password = "NNSXS.APVFJ2B3O3JJE2ZHNGZL2I2DBXXU7GBZ6TEEE3A.LY4TJYMN45KBHKDAJVCTXC
 # TTI application and device details
 tenant_id = "viam"
 app_id = "chris-test"
-dev_id = "eui-24e124746e143655"  # Ensure the device ID is in lowercase
+dev_id = "eui-a840412c8d5929c0"  # Ensure the device ID is in lowercase
 topic = f"v3/{app_id}@{tenant_id}/devices/{dev_id}/up"
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
