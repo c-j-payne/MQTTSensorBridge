@@ -1,5 +1,3 @@
-#!/home/viam/dev/current_monitor/venv/bin/python
-
 import asyncio
 import json
 import paho.mqtt.client as mqtt
@@ -12,24 +10,21 @@ from viam.resource.base import ResourceBase
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.resource.types import Model, ModelFamily
 from viam.utils import ValueTypes, struct_to_dict
+from viam.errors import NoCaptureToStoreError
 
 LOGGER = getLogger(__name__)
 
 class MQTTSensorBridge(Sensor):
     MODEL: ClassVar[Model] = Model(ModelFamily("chris", "iot-sensor"), "mqttsensorbridge")
 
-    temp_value: float = 0.0  # Store the temperature value
-
     @classmethod
     def validate_config(cls, config: ComponentConfig) -> Sequence[str]:
-        LOGGER.info("MODULE VALIDATE")
         return []
 
     @classmethod
     def new(cls, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]) -> "MQTTSensorBridge":
         sensor = cls(config.name)
         sensor.reconfigure(config, dependencies)
-        LOGGER.info("MODULE NEW")
         sensor.setup_mqtt()  # Set up MQTT when the sensor is created
         return sensor
 
@@ -37,13 +32,13 @@ class MQTTSensorBridge(Sensor):
         super().__init__(name)
 
     def reconfigure(self, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]):
-        
+        self.value_timestamp = None
         # Configure broker
         try:
             broker = config.attributes.fields.get("broker", {}).string_value
             if broker is None:
                 raise ValueError("MQTT broker input needed")
-            self.broker=broker
+            self.broker = broker
             LOGGER.info(f"broker: {self.broker}")
         except (ValueError, TypeError) as e:
             raise ValueError("broker must be string", e)
@@ -93,14 +88,13 @@ class MQTTSensorBridge(Sensor):
 
         try:
             self.payload_parameter = config.attributes.fields.get("payload_parameter", {}).string_value
-            if self.port is None:
-                raise ValueError("Input parameter to query")
-            self.port = int(self.port)
+            if self.payload_parameter == "":
+                self.parameter_specified = False
+            else:
+                self.parameter_specified = True
         except (ValueError, TypeError) as e:
             raise ValueError("Error setting query parameter", e)
-
-        LOGGER.info(f"Configured with username: {self.username}, password: {self.password}, tenant_id: {self.tenant_id}, app_id: {self.app_id}, dev_id: {self.dev_id}")
-        
+       
         try:
             LOGGER.info("MODULE CONFIGURED")
         except (ValueError, AttributeError) as e:
@@ -113,42 +107,59 @@ class MQTTSensorBridge(Sensor):
         return {}
 
     async def get_readings(self, extra: Optional[Dict[str, Any]] = None, **kwargs) -> Mapping[str, Any]:
-        try:
-            return {'temperature': self.temp_value}
+        try:            
+            if self.parameter_specified:                
+                return  {f"{self.payload_parameter} :": self.sensor_value, "Time: ": self.value_timestamp}               
+            else:
+                return {"Total payload: ": self.sensor_value}
+
         except Exception as e:
-            LOGGER.error(f"Error in get_readings: {e}")
-            return {'error': str(e)}
+            LOGGER.error("No data to capture")
+            raise NoCaptureToStoreError()
+
 
     def setup_mqtt(self):
         topic = f"v3/{self.app_id}@{self.tenant_id}/devices/{self.dev_id}/up"
 
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
-                LOGGER.info("Connected to MQTT Broker")
+                LOGGER.info("Connected to MQTT Broker") 
                 client.subscribe(topic)
                 LOGGER.info(f"Subscribed to topic: {topic}")
             else:
                 LOGGER.error(f"Connection failed with code {rc}")
 
         def on_message(client, userdata, msg):
-            LOGGER.info(f"Received message on topic: {msg.topic}")
-            LOGGER.info(f"Message payload: {msg.payload.decode()}")
-            # Parse the JSON message
             try:
                 data = json.loads(msg.payload)
-                decoded_payload = data["uplink_message"]["decoded_payload"]
-                LOGGER.info(f"Decoded Payload: {json.dumps(decoded_payload, indent=2)}")
-                # Check if the payload contains the temperature value
-                if self.payload_parameter in decoded_payload:
-                    self.temp_value = decoded_payload[self.payload_parameter]
-                    LOGGER.info(f"Updated temperature value: {self.temp_value}")
+                decoded_payload = data['uplink_message']['decoded_payload']   
+
+
+                # Access 'uplink_message' directly
+                if 'uplink_message' in data:
+                    decoded_payload = data['uplink_message']['decoded_payload'] 
+
+                    if self.payload_parameter in decoded_payload:
+                        new_value = decoded_payload[self.payload_parameter]
+                        new_time = data["received_at"] 
+
+                        # Process the new value
+                        if new_value:  # Check if new_value is not empty or zero
+                            self.sensor_value = new_value
+                            self.last_valid_value = new_value
+                            self.value_timestamp = new_time
+                            self.last_value_timestamp = new_time
+                            
+                        else:
+                            self.sensor_value = self.last_valid_value
+                            self.value_timestamp = self.last_value_timestamp                        
                 else:
-                    LOGGER.info("Decoded payload does not contain temperature data.")
+                    LOGGER.error(f"Key 'uplink_message' not found in parsed data: {data}")
+
             except json.JSONDecodeError as e:
                 LOGGER.error(f"Error decoding JSON: {e}")
             except KeyError as e:
                 LOGGER.error(f"KeyError in parsed data: {e}")
-
         self.mqtt_client = mqtt.Client(client_id=self.dev_id)
         self.mqtt_client.username_pw_set(self.username, self.password)
         self.mqtt_client.tls_set(cert_reqs=mqtt.ssl.CERT_REQUIRED, tls_version=mqtt.ssl.PROTOCOL_TLS)

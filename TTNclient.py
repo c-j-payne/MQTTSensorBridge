@@ -19,14 +19,16 @@ def on_connect(client, userdata, flags, rc):
     else:
         print(f"Connection failed with code {rc}")
 def on_message(client, userdata, msg):
-    print(f"Received message on topic: {msg.topic}")
-    print(f"Message payload: {msg.payload.decode()}")
+    #print(f"Received message on topic: {msg.topic}")
+    #print(f"Message payload: {msg.payload.decode()}")
     # Parse the JSON message
     try:
         data = json.loads(msg.payload)
         decoded_payload = data["uplink_message"]["decoded_payload"]
-        print("Decoded Payload:")
-        print(json.dumps(decoded_payload, indent=2))  # Print formatted JSON
+        time = data["received_at"]
+        #print("Decoded Payload:")
+        #print(json.dumps(decoded_payload, indent=2))  # Print formatted JSON
+        print(time)
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON: {e}")
 client = mqtt.Client(client_id=dev_id)

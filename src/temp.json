@@ -1,0 +1,94 @@
+{
+    "name": "as.up.data.forward",
+    "time": "2024-07-19T15:13:20.214732817Z",
+    "identifiers": [
+      {
+        "device_ids": {
+          "device_id": "eui-a840412c8d5929c0",
+          "application_ids": {
+            "application_id": "chris-test"
+          },
+          "dev_eui": "A840412C8D5929C0",
+          "join_eui": "A840410000000101",
+          "dev_addr": "27FD91C7"
+        }
+      }
+    ],
+    "data": {
+      "@type": "type.googleapis.com/ttn.lorawan.v3.ApplicationUp",
+      "end_device_ids": {
+        "device_id": "eui-a840412c8d5929c0",
+        "application_ids": {
+          "application_id": "chris-test"
+        },
+        "dev_eui": "A840412C8D5929C0",
+        "join_eui": "A840410000000101",
+        "dev_addr": "27FD91C7"
+      },
+      "correlation_ids": [
+        "gs:uplink:01J35RW0KQ52MD5NBAPP3KZV33"
+      ],
+      "received_at": "2024-07-19T15:13:20.204317228Z",
+      "uplink_message": {
+        "session_key_id": "AZDLjeXxeCof2HKIV3LOZw==",
+        "f_port": 2,
+        "frm_payload": "DigA4QAADH//f/8=",
+        "decoded_payload": {
+          "BatV": 3.624,
+          "Door_status": "OPEN",
+          "EXTI_Trigger": "FALSE",
+          "TempC1": 22.5
+        },
+        "rx_metadata": [
+          {
+            "gateway_ids": {
+              "gateway_id": "eui-a84041fdfe27f066",
+              "eui": "A84041FDFE27F066"
+            },
+            "time": "2024-07-19T15:13:19.863398075Z",
+            "timestamp": 1750049255,
+            "rssi": -66,
+            "channel_rssi": -66,
+            "snr": 13,
+            "uplink_token": "CiIKIAoUZXVpLWE4NDA0MWZkZmUyN2YwNjYSCKhAQf3+J/BmEOfDvsIGGgwIj4XqtAYQraXz2AMg2NzBuPedBw==",
+            "received_at": "2024-07-19T15:13:19.903684581Z"
+          }
+        ],
+        "settings": {
+          "data_rate": {
+            "lora": {
+              "bandwidth": 125000,
+              "spreading_factor": 10,
+              "coding_rate": "4/5"
+            }
+          },
+          "frequency": "904100000",
+          "timestamp": 1750049255,
+          "time": "2024-07-19T15:13:19.863398075Z"
+        },
+        "received_at": "2024-07-19T15:13:19.992854603Z",
+        "consumed_airtime": "0.370688s",
+        "network_ids": {
+          "net_id": "000013",
+          "ns_id": "EC656E0000103108",
+          "tenant_id": "viam",
+          "cluster_id": "nam1",
+          "cluster_address": "nam1.cloud.thethings.industries",
+          "tenant_address": "viam.nam1.cloud.thethings.industries"
+        }
+      }
+    },
+    "correlation_ids": [
+      "gs:uplink:01J35RW0KQ52MD5NBAPP3KZV33"
+    ],
+    "origin": "ip-10-22-6-136.us-west-1.compute.internal",
+    "context": {
+      "tenant-id": "CgR2aWFt"
+    },
+    "visibility": {
+      "rights": [
+        "RIGHT_APPLICATION_TRAFFIC_READ"
+      ]
+    },
+    "unique_id": "01J35RW0TPJE2N41RYJF6SQ9Z8"
+  }
