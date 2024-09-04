@@ -146,6 +146,7 @@ class MQTTSensorBridge(Sensor):
                     if self.payload_parameter in decoded_payload:
                         new_value = decoded_payload[self.payload_parameter]
                         new_time = data["received_at"] 
+                        LOGGER.info(f"ON_MESSAGE -> {decoded_payload} is there a parameter: {self.payload_parameter}, new_value: {new_value}")
 
                         # Process the new value
                         if new_value:  # Check if new_value is not empty or zero
