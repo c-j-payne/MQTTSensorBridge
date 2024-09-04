@@ -30,6 +30,9 @@ class MQTTSensorBridge(Sensor):
 
     def __init__(self, name: str):
         super().__init__(name)
+        self.last_valid_value = -1
+        self.last_value_timestamp = -1
+    
 
     def reconfigure(self, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]):
         self.value_timestamp = None
