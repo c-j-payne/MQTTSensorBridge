@@ -133,7 +133,7 @@ class MQTTSensorBridge(Sensor):
                 LOGGER.error(f"Connection failed with code {rc}")
 
         def on_message(client, userdata, msg):
-            LOGGER.info(f"On message-> client:{client} -- userdata:{userdata} -- msg:{msg}")
+            LOGGER.info(f"On message-> client:{client} -- userdata:{userdata} -- msg:{msg} -- payload:{msg.payload}")
             try:
                 data = json.loads(msg.payload)
                 decoded_payload = data['uplink_message']['decoded_payload']   
