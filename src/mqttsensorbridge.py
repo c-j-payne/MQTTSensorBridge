@@ -15,7 +15,7 @@ from viam.errors import NoCaptureToStoreError
 LOGGER = getLogger(__name__)
 
 class MQTTSensorBridge(Sensor):
-    MODEL: ClassVar[Model] = Model(ModelFamily("chris", "iot-sensor"), "mqttsensorbridge")
+    MODEL: ClassVar[Model] = Model(ModelFamily("sensor", "iot-sensor"), "mqttsensorbridge")
 
     @classmethod
     def validate_config(cls, config: ComponentConfig) -> Sequence[str]:
