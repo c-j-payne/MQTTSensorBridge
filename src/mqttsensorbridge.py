@@ -30,8 +30,8 @@ class MQTTSensorBridge(Sensor):
 
     def __init__(self, name: str):
         super().__init__(name)
-        self.last_valid_value = -1
-        self.last_value_timestamp = -1
+        self.last_valid_value = None
+        self.last_value_timestamp = None
     
 
     def reconfigure(self, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]):
@@ -133,7 +133,6 @@ class MQTTSensorBridge(Sensor):
                 LOGGER.error(f"Connection failed with code {rc}")
 
         def on_message(client, userdata, msg):
-            LOGGER.info(f"On message-> client:{client} -- userdata:{userdata} -- msg:{msg} -- payload:{msg.payload}")
             try:
                 data = json.loads(msg.payload)
                 decoded_payload = data['uplink_message']['decoded_payload']   
@@ -146,10 +145,9 @@ class MQTTSensorBridge(Sensor):
                     if self.payload_parameter in decoded_payload:
                         new_value = decoded_payload[self.payload_parameter]
                         new_time = data["received_at"] 
-                        LOGGER.info(f"ON_MESSAGE -> {decoded_payload} is there a parameter: {self.payload_parameter}, new_value: {new_value}")
-
+                        
                         # Process the new value
-                        if new_value != -1:  # Check if new_value is not empty or zero
+                        if new_value is not None:  # Check if new_value is not empty or zero
                             self.sensor_value = new_value
                             self.last_valid_value = new_value
                             self.value_timestamp = new_time
